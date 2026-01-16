@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urban Thread | Premium Streetwear (Adobe Client Data Layer)</title>
+    
+    <style>
+        /* --- CORE STYLES --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        html { scroll-behavior: smooth; }
+        body { background-color: #ffffff; color: #1a1a1a; line-height: 1.6; overflow-x: hidden; }
+
+        /* Navigation */
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 8%; background: #fff; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid #eee; }
+        .logo { font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
+        .nav-links { display: flex; list-style: none; align-items: center; }
+        .nav-links li { margin-left: 30px; }
+        .nav-links a { text-decoration: none; color: #1a1a1a; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; cursor: pointer; }
+
+        /* Hero Header */
+        .hero {
+            height: 60vh;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), 
+                        url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1500&q=80');
+            background-size: cover; background-position: center;
+            display: flex; justify-content: center; align-items: center; text-align: center; color: white;
+        }
+        .hero-content h1 { font-size: clamp(2.5rem, 8vw, 4rem); margin-bottom: 1rem; font-weight: 800; }
+
+        /* Search Bar */
+        .search-container { padding: 3rem 8% 0; text-align: center; }
+        #searchInput { width: 100%; max-width: 400px; padding: 12px 20px; border: 1px solid #ddd; border-radius: 25px; outline: none; transition: 0.3s; }
+        #searchInput:focus { border-color: #000; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+
+        /* Product Grid */
+        .shop-container { padding: 3rem 8% 5rem; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; }
+        .product-card { border: 1px solid #f1f1f1; padding-bottom: 15px; cursor: pointer; transition: 0.3s; position: relative; display: block; }
+        .product-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .product-card.hidden { display: none; }
+        .img-container { width: 100%; height: 350px; overflow: hidden; background: #f7f7f7; }
+        .product-img { width: 100%; height: 100%; object-fit: cover; }
+        .product-info { padding: 15px; }
+        .price { font-weight: bold; color: #1a1a1a; font-size: 1.1rem; }
+        .rating { color: #f1c40f; font-size: 0.8rem; margin: 5px 0; }
+
+        /* Side Cart */
+        #cart-sidebar { position: fixed; right: -400px; top: 0; width: 350px; height: 100%; background: white; z-index: 2001; box-shadow: -5px 0 15px rgba(0,0,0,0.1); transition: 0.4s; padding: 40px 20px; display: flex; flex-direction: column; }
+        #cart-sidebar.active { right: 0; }
+        .cart-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        #cart-items-list { list-style: none; flex-grow: 1; overflow-y: auto; }
+        .cart-item { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.9rem; padding: 10px; background: #f9f9f9; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 800px; display: grid; grid-template-columns: 1fr 1fr; position: relative; border-radius: 8px; overflow: hidden; }
+        .size-picker { display: flex; gap: 10px; margin: 20px 0; }
+        .size-btn { border: 1px solid #ddd; padding: 5px 12px; cursor: pointer; font-size: 0.8rem; }
+        .size-btn.active { background: #000; color: #fff; border-color: #000; }
+
+        .btn { display: inline-block; padding: 16px 45px; background: #000; color: #fff; text-decoration: none; font-weight: bold; text-transform: uppercase; font-size: 0.8rem; border: none; cursor: pointer; transition: 0.3s; }
+        .btn:hover { opacity: 0.8; }
+
+        #toast { visibility: hidden; position: fixed; bottom: 30px; right: 30px; background: #333; color: white; padding: 16px; z-index: 4000; text-transform: uppercase; font-size: 0.8rem; border-radius: 4px; }
+        #toast.show { visibility: visible; animation: fadeInOut 2.5s; }
+
+        @keyframes fadeInOut { 0% { opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+        @media (max-width: 768px) { .modal-content { grid-template-columns: 1fr; } .navbar { padding: 1.2rem 5%; } }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">URBAN THREAD</div>
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a onclick="toggleCart()">Cart (<span id="cart-count">0</span>)</a></li>
+        </ul>
+    </nav>
+
+    <header id="home" class="hero">
+        <div class="hero-content">
+            <h1>PREMIUM STREETWEAR</h1>
+            <p>New Winter Drops Available Now</p>
+        </div>
+    </header>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search products..." onkeyup="filterProducts()">
+    </div>
+
+    <section id="shop" class="shop-container">
+        <div class="product-grid" id="productGrid">
+            
+            <div class="product-card" data-id="P001" data-name="knit beanie" data-price="18.00" onclick="openProduct('Knit Beanie', 18.00, 'https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?auto=format&fit=crop&w=600&q=80', 'P001')">
+                <div class="img-container"><img src="https://images.unsplash.com/photo-1576871337632-b9aef4c17ab9?auto=format&fit=crop&w=600&q=80" class="product-img"></div>
+                <div class="product-info">
+                    <h3>Knit Beanie</h3>
+                    <div class="rating">★★★★☆</div>
+                    <p class="price">$18.00</p>
+                </div>
+            </div>
+
+            <div class="product-card" data-id="P002" data-name="bomber jacket" data-price="120.00" onclick="openProduct('Bomber Jacket', 120.00, 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&q=80', 'P002')">
+                <div class="img-container"><img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=600&q=80" class="product-img"></div>
+                <div class="product-info">
+                    <h3>Bomber Jacket</h3>
+                    <div class="rating">★★★★★</div>
+                    <p class="price">$120.00</p>
+                </div>
+            </div>
+
+            <div class="product-card" data-id="P003" data-name="heavyweight hoodie" data-price="65.00" onclick="openProduct('Heavyweight Hoodie', 65.00, 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=600&q=80', 'P003')">
+                <div class="img-container"><img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=600&q=80" class="product-img"></div>
+                <div class="product-info">
+                    <h3>Heavyweight Hoodie</h3>
+                    <div class="rating">★★★★☆</div>
+                    <p class="price">$65.00</p>
+                </div>
+            </div>
+
+            <div class="product-card" data-id="P004" data-name="slim denim" data-price="85.00" onclick="openProduct('Slim Denim', 85.00, 'https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=600&q=80', 'P004')">
+                <div class="img-container"><img src="https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=600&q=80" class="product-img"></div>
+                <div class="product-info">
+                    <h3>Slim Denim</h3>
+                    <div class="rating">★★★★☆</div>
+                    <p class="price">$85.00</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <div id="cart-sidebar">
+        <div class="cart-header">
+            <h3>Cart</h3>
+            <span style="cursor:pointer" onclick="toggleCart()">✕</span>
+        </div>
+        <ul id="cart-items-list"></ul>
+        <button class="btn" style="width:100%; margin-top:20px" onclick="checkout()">Checkout</button>
+    </div>
+
+    <div id="prodModal" class="modal">
+        <div class="modal-content">
+            <span style="position:absolute; right:20px; top:10px; cursor:pointer; font-size:25px; z-index:10" onclick="closeProduct()">✕</span>
+            <div class="img-container" style="height:100%"><img id="mImg" src="" style="width:100%; height:100%; object-fit:cover"></div>
+            <div style="padding:40px">
+                <h2 id="mTitle">Product Name</h2>
+                <p id="mPrice" style="font-weight:bold; margin:10px 0; font-size:1.5rem">$0.00</p>
+                <p style="font-size:0.7rem; font-weight:bold; margin-top:20px">SELECT SIZE</p>
+                <div class="size-picker">
+                    <div class="size-btn" onclick="selectSize(this)">S</div>
+                    <div class="size-btn active" onclick="selectSize(this)">M</div>
+                    <div class="size-btn" onclick="selectSize(this)">L</div>
+                    <div class="size-btn" onclick="selectSize(this)">XL</div>
+                </div>
+                <button class="btn" style="width:100%" onclick="addItemFromModal()">Add To Cart</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">Added to cart</div>
+
+    <script>
+        // --- 1. INITIALIZE ADOBE CLIENT DATA LAYER ---
+        window.adobeDataLayer = window.adobeDataLayer || [];
+
+        // Push Page View Immediately
+        window.adobeDataLayer.push({
+            "event": "page-view",
+            "page": {
+                "pageName": document.title,
+                "server": "production",
+                "siteSection": "Home"
+            }
+        });
+
+        let cart = [];
+        let currentProduct = {};
+
+        function filterProducts() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.product-card');
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name');
+                card.classList.toggle('hidden', !name.includes(input));
+            });
+        }
+
+        // --- 2. ADOBE: PRODUCT VIEW EVENT ---
+        function openProduct(name, price, img, id) {
+            currentProduct = { name, price, img, id };
+            document.getElementById('mTitle').innerText = name;
+            document.getElementById('mPrice').innerText = "$" + price.toFixed(2);
+            document.getElementById('mImg').src = img;
+            document.getElementById('prodModal').style.display = 'flex';
+
+            // Adobe Push
+            window.adobeDataLayer.push({
+                "event": "product-view",
+                "product": {
+                    "productID": id,
+                    "productName": name,
+                    "price": price
+                }
+            });
+            console.log("Adobe DL: product-view pushed");
+        }
+
+        function closeProduct() { document.getElementById('prodModal').style.display = 'none'; }
+
+        function selectSize(btn) {
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // --- 3. ADOBE: ADD TO CART EVENT ---
+        function addItemFromModal() {
+            const size = document.querySelector('.size-btn.active').innerText;
+            const newItem = { ...currentProduct, size };
+            cart.push(newItem);
+
+            // Adobe Push
+            window.adobeDataLayer.push({
+                "event": "cart-add",
+                "cartItem": {
+                    "sku": newItem.id,
+                    "name": newItem.name,
+                    "price": newItem.price,
+                    "variant": newItem.size,
+                    "quantity": 1
+                }
+            });
+
+            updateCartUI();
+            closeProduct();
+            showToast(currentProduct.name + " added!");
+            console.log("Adobe DL: cart-add pushed");
+        }
+
+        function updateCartUI() {
+            document.getElementById('cart-count').innerText = cart.length;
+            const list = document.getElementById('cart-items-list');
+            list.innerHTML = "";
+            cart.forEach((item) => {
+                list.innerHTML += `<li class="cart-item">
+                    <span>${item.name} (${item.size})</span>
+                    <span>$${item.price.toFixed(2)}</span>
+                </li>`;
+            });
+        }
+
+        function toggleCart() { document.getElementById('cart-sidebar').classList.toggle('active'); }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        // --- 4. ADOBE: PURCHASE EVENT ---
+        function checkout() {
+            if(cart.length === 0) return alert("Cart is empty!");
+            const total = cart.reduce((sum, i) => sum + i.price, 0);
+            const transactionID = 'T' + Math.floor(Math.random() * 100000);
+
+            // Adobe Push
+            window.adobeDataLayer.push({
+                "event": "purchase",
+                "transaction": {
+                    "transactionID": transactionID,
+                    "totalPrice": total,
+                    "currency": "USD",
+                    "items": cart.map(item => ({
+                        "sku": item.id,
+                        "name": item.name,
+                        "price": item.price,
+                        "variant": item.size
+                    }))
+                }
+            });
+
+            alert("Checkout Success! ID: " + transactionID);
+            console.log("Adobe DL: purchase pushed");
+            cart = []; updateCartUI(); toggleCart();
+        }
+    </script>
+</body>
+</html>
